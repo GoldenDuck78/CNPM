@@ -42,7 +42,6 @@ class CategoryFragment : Fragment(), CategoriesAdapter.Listener {
         runBlocking {
             launch {
                 viewModel.getCategoryFromAPI()
-                viewModel.getFirstCategoryFromAPI()
             }
         }
         viewModel.categoryList.observe(viewLifecycleOwner, Observer {

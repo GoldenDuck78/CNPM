@@ -39,5 +39,7 @@ data class Cart(
     @ColumnInfo(name = "quantity")
     val quantity : Int,
     @PrimaryKey(autoGenerate = true)
-    var uuid: Int = 0
+    var uuid: Int = 0,
+    @ColumnInfo(name = "isDeposited")
+    val isDeposited : Int
 )

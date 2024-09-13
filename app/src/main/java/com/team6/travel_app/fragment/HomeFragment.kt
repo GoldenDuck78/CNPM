@@ -39,14 +39,13 @@ class HomeFragment : Fragment(), ProductsAdapter.Listener, CategoryAdapter.Liste
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel = ViewModelProvider(this)[HomeViewModel::class.java]
-        //viewModel.getDataFromUrl()
         viewModel.getData(requireContext())
         viewModel.products.observe(viewLifecycleOwner, androidx.lifecycle.Observer { products ->
             products.let {
                 productsAdapter = products?.let { it1 ->
                     ProductsAdapter(
                         it1,
-                        requireContext() // TODO Fragment HomeFragment not attached to a context.
+                        requireContext()
                     )
                 }!!
                 binding.recyclerView.adapter = productsAdapter
@@ -71,7 +70,6 @@ class HomeFragment : Fragment(), ProductsAdapter.Listener, CategoryAdapter.Liste
                 super.onScrollStateChanged(recyclerView, newState)
                 state = newState
             }
-
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
                 if (dy > 0 && (state == 0 || state == 2)) {

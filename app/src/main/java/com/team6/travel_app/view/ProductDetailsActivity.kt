@@ -103,6 +103,7 @@ ProductDetailsActivity : AppCompatActivity() {
                                 products.thumbnail,
                                 true,
                                 1
+                                , isDeposited = 0
                             )
                         )
                     }

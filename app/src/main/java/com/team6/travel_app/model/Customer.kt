@@ -1,5 +1,6 @@
 package com.team6.travel_app.model
 
+import android.os.Message
 import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.Parcelize
@@ -13,6 +14,15 @@ data class CusBaseClass(
     @SerializedName("limit") val limit: Int? = null
 ) : Parcelable
 
+@Parcelize
+data class CustomerResponse(
+    @SerializedName("status") val status :  Int? = null,
+    @SerializedName("status_message") val message: String? = null
+) : Parcelable
+//{
+//    "status": 1,
+//    "status_message": "Customer Added Successfully."
+//}
 @Parcelize
 data class Customer(
     @SerializedName("id") val id: String? = null,//named as productId, productName... and productList --> products

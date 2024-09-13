@@ -13,6 +13,7 @@ import com.team6.travel_app.fragment.*
 import com.team6.travel_app.utils.network.ConnectivityObserver
 import com.team6.travel_app.utils.network.NetworkConnectivityObserver
 import com.google.android.material.snackbar.Snackbar
+import com.team6.travel_app.utils.UrlBase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -23,8 +24,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var connectivityObserver: ConnectivityObserver
 
     companion object {
-        const val BASE_URL = "http://nguyenvantuanolivas.mooo.com/p_api/"
-        const val TOUR_URL = "http://nguyenvantuanolivas.mooo.com/t_api/"
+        const val BASE_URL = UrlBase.domain +"/api/"
+        const val TOUR_URL = UrlBase.domain +"/t_api/"
     }
 
 

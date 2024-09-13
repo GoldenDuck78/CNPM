@@ -1,5 +1,6 @@
 package com.team6.travel_app.fragment
 
+import android.app.AlertDialog
 import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Bundle
@@ -9,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity.RESULT_OK
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -26,9 +28,14 @@ import com.stripe.android.PaymentConfiguration
 import com.team6.travel_app.R
 
 import com.team6.travel_app.fragment.*
+import com.team6.travel_app.view.PaymentActivity
 
 
 import kotlinx.coroutines.*
+import org.json.JSONException
+import org.json.JSONObject
+import vn.momo.momo_partner.AppMoMoLib
+import java.time.temporal.TemporalAmount
 
 
 class CartFragment : Fragment() {
@@ -36,40 +43,19 @@ class CartFragment : Fragment() {
     private lateinit var cartAdapter: CartAdapter
     lateinit var binding: FragmentCartBinding
     private lateinit var cartDatabase: CartDatabase
-    //private var cartFragment = CartFragment()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentCartBinding.inflate(layoutInflater)
-        //viewModel = ViewModelProvider(this)[CartViewModel::class.java]
-
         return binding.root
     }
-
-
-
-    // mất hết dữ liệu, cả sản phẩm và total
-    // phương thức này gọi 2 hàm viewModelObserver(), setUpRecyclerView()
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // thanh toán
-        PaymentConfiguration.init(
-            requireActivity(),
-            "pk_test_qblFNYngBkEdjEZ16jxxoWSM"
-        )
-        // binding.recyclerViewCart.layoutManager = LinearLayoutManager(context,RecyclerView.VERTICAL,false)
         viewModel = ViewModelProvider(this)[CartViewModel::class.java]
-
         cartDatabase = CartDatabase.invoke(requireContext())
         viewModel.getDataFromRoom(requireContext(), binding, cartDatabase)
-        /* if(viewModel.cartList.value?.isEmpty() == true){
-             binding.emptyListMessage.visibility = View.VISIBLE
-         }*/
-
         binding.progressBar.visibility = View.GONE
-
-
         CoroutineScope(Dispatchers.IO).launch {
             if (cartDatabase.cartDao().rowCount() == 0) {
                 withContext(Dispatchers.Main) {
@@ -89,8 +75,6 @@ class CartFragment : Fragment() {
 
     }
 
-    //nếu comment sẽ mất giá (total)
-    //hàm này là hàm được gọi
     private fun viewModelObserver() {
         viewModel.apply {
             //tinh total
@@ -122,20 +106,11 @@ class CartFragment : Fragment() {
 
         }
     }
-
-    // nếu comment sẽ mất sản phẩm trong card
-    //hàm này là hàm được gọi
     private fun setUpRecyclerView() {
-
         cartAdapter = viewModel.cartList.value?.let {
             CartAdapter(it, requireContext(), cartDatabase, binding)
         }!!
-
         binding.recyclerViewCart.adapter = cartAdapter
-
-
-
-
         binding.recyclerViewCart.addItemDecoration(
             DividerItemDecoration(
                 requireContext(),
@@ -143,9 +118,6 @@ class CartFragment : Fragment() {
             )
         )
         binding.recyclerViewCart.layoutManager = LinearLayoutManager(requireContext())
-
-
-
         val itemTouchHelper = ItemTouchHelper(object : SwipeHelper(binding.recyclerViewCart) {
             override fun instantiateUnderlayButton(position: Int): List<UnderlayButton> {
                 val buttons = ArrayList<UnderlayButton>()
@@ -157,33 +129,38 @@ class CartFragment : Fragment() {
 
         itemTouchHelper.attachToRecyclerView(binding.recyclerViewCart)
 
-        binding.buttonPurchase.setOnClickListener(View.OnClickListener {
+        binding.buttonPurchase.setOnClickListener {
             CoroutineScope(Dispatchers.IO).launch {
-                // Gọi hàm postRequest ở đây
-                if (cartDatabase.cartDao().rowCount() == 0) {
-                    print("bạn chưa tham gia tour nào")
-                    //Toast.makeText(context,"bạn chưa tham gia tour nào",Toast.LENGTH_SHORT).show()
+                withContext(Dispatchers.Main) {
+                    binding.buttonPurchase.isEnabled = false // Disable button
+                }
 
+                if (cartDatabase.cartDao().rowCount() == 0) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(requireContext(), "Bạn chưa tham gia tour nào", Toast.LENGTH_SHORT).show()
+                    }
                 } else {
+                    val intent = Intent(requireContext(), PaymentActivity::class.java)
+                    intent.putExtra("amount", binding.totalAmount.text.split(" ")[0])
+                    withContext(Dispatchers.Main) {
+                        startActivity(intent)
+                    }
                     viewModel.postRequest(requireContext(), cartDatabase)
                     viewModel.viewModelScope.launch {
                         val cardDb = CartDatabase.invoke(requireContext()).cartDao()
                         cardDb.deleteAllRecords()
                     }
-//                    beginTransaction(CartFragment())
+                }
+
+                withContext(Dispatchers.Main) {
+                    binding.buttonPurchase.isEnabled = true // Re-enable button
                 }
             }
+        }
 
-
-        })
     }
 
-//    private fun beginTransaction(fragment: Fragment) {
-//        childFragmentManager.beginTransaction().apply {
-//            replace(R.id.cartFrameLayout, fragment)
-//            commit()
-//        }
-//    }
+
     //Nút loại bỏ
     private fun deleteButton(position: Int): SwipeHelper.UnderlayButton {
         return SwipeHelper.UnderlayButton(
@@ -199,9 +176,8 @@ class CartFragment : Fragment() {
             })
     }
 
-    fun purchase() {
-//        viewModel.postRequest(requireContext())
-    }
+
+
 
 
 }

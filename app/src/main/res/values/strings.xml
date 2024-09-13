@@ -27,7 +27,7 @@
     <string name="no_internet_connection">Không có kết nối internet!</string>
     <string name="discover">Discover</string>
 
-<!--A42064: Muốn thêm tên để sử dụng ở trong app phải khai báo vào đây    -->
+    <!--A42064: Muốn thêm tên để sử dụng ở trong app phải khai báo vào đây    -->
     <string name="tours">Tours</string>
     <string name="your_tour">Your Tour</string>
     <string name="storage">Storage</string>

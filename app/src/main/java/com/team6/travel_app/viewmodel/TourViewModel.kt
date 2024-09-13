@@ -8,8 +8,6 @@ import androidx.lifecycle.viewModelScope
 import com.team6.travel_app.data.*
 import com.team6.travel_app.utils.CustomSharedPreferences
 import kotlinx.coroutines.*
-import android.widget.Toast
-import com.team6.travel_app.data.ImageDatabase
 import com.team6.travel_app.data.TourDatabase
 import com.team6.travel_app.model.Tour
 import com.team6.travel_app.model.TourBaseClass
@@ -59,25 +57,6 @@ class TourViewModel : ViewModel() {
             _tours2.postValue(db.tourDao().getAllEntities())
     }
 
-    fun addItemToRoom(position: Int, context: Context) { //TODO
-        /*    CoroutineScope(Dispatchers.IO).
-                    launch {
-                        if()
-                        val cartDatabase = CartDatabase.invoke(context)
-                        cartDatabase.cartDao().insertEntity(cart)
-                    }*/
-    }
-//    fun addToCart(context : Context,id: Int){
-//        viewModelScope.launch(Dispatchers.IO) {
-//            val record = TourDatabase.invoke(context).favoriteDao().getEntity(id)
-//            val aCart = Cart(record.id,record.title,record.discountPercentage,record.description,record.price,record.rating,record.stock,record.brand,record.thumbnail,true,1)
-//            val cartDb = CartDatabase(context).cartDao().insertEntity(aCart)
-//
-//        }
-//    }
-
-
-    // lấy dữ liệu tour từ api
 
     //done
     fun getData(context: Context) {
@@ -125,7 +104,6 @@ class TourViewModel : ViewModel() {
 
     // Luu vào SQLite
     fun storeInSQLite(context: Context, tours: ArrayList<Tour>) {
-
         println("store In DB")
         viewModelScope.launch {
             val tourDb = TourDatabase.invoke(context).tourDao()
@@ -138,12 +116,6 @@ class TourViewModel : ViewModel() {
         }
         customPreferences.saveTime(System.nanoTime())
 
-    }
-
-    // Lấy dữ liệu từ SQLite
-
-    fun isAddedToCart(context: Context,id:Int): Boolean{
-        return false
     }
 
 

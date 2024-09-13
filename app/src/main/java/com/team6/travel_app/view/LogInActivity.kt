@@ -7,12 +7,13 @@ import com.team6.travel_app.adapter.TabLayoutAdapter
 import com.team6.travel_app.databinding.ActivityLogInBinding
 import com.team6.travel_app.fragment.LogInFragment
 import com.team6.travel_app.fragment.SignUpFragment
+import com.team6.travel_app.utils.UrlBase
 
 class LogInActivity : AppCompatActivity() {
     lateinit var binding: ActivityLogInBinding
 
     companion object {
-        const val CUS_URL = "http://nguyenvantuanolivas.mooo.com/api2/"
+        const val CUS_URL = UrlBase.domain + "/api2/"
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,9 +30,7 @@ class LogInActivity : AppCompatActivity() {
         adapter.addFragment(SignUpFragment(),"Đăng ký")
         binding.viewPager.adapter = adapter
         binding.tabLayout.setupWithViewPager(binding.viewPager)
-        /*  tabLayout.getTabAt(0)?.setIcon(R.drawable.vector_card)
-          tabLayout.getTabAt(1)?.setIcon(R.drawable.vector_card)
-  */
+
     }
 
 }

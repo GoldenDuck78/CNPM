@@ -53,15 +53,6 @@ class ProfileFragment : Fragment() {
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment ProfileFragment.
-         */
-// TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
             ProfileFragment().apply {
@@ -77,7 +68,10 @@ class ProfileFragment : Fragment() {
         customerDatabase = CustomerDatabase.invoke(requireContext())
         CoroutineScope(Dispatchers.IO).launch {
             val name = customerDatabase.CustomerDao().getName()
-            binding.textView2.text = name.toString()
+            binding.textViewProfileName.text = name.toString()
+            binding.textViewPhoneNumber.text = customerDatabase.CustomerDao().getPhoneNumber().toString()
+            binding.textViewEmail.text = customerDatabase.CustomerDao().getEmail().toString()
+            binding.textViewAddress.text = customerDatabase.CustomerDao().getAddress().toString()
         }
 
     }

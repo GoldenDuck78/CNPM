@@ -19,7 +19,6 @@
         android:layout_height="wrap_content">
 
 
-
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewAllImages"
             android:layout_width="match_parent"

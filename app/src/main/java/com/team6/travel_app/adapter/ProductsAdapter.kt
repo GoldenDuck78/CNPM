@@ -51,13 +51,10 @@ class ProductsAdapter(
             products[position].thumbnail,
             placeholderProgressBar(holder.itemView.context)
         )
-        //holder.binding.textViewProductName.text = products[position].title.toString()
-        // holder.binding.textViewProductPrice.text = "$".also {products[position].price.toString() }
         cartDatabase = CartDatabase.invoke(context)
-        //Picasso.with(context).load(products[position].thumbnail).into(holder.binding.imageOfProduct)
         holder.binding.buttonAddToCart.setOnClickListener {
             CoroutineScope(Dispatchers.IO).
-                launch { // Todo(if there is a thread switch to coroutine)
+                launch {
 //                    if (cartDatabase?.cartDao()
 //                            ?.searchForEntity((holder.absoluteAdapterPosition.plus(1))) != products[position].id
 //                        || cartDatabase?.cartDao()?.rowCount() == 0
@@ -82,7 +79,8 @@ class ProductsAdapter(
                                 products[position].brand,
                                 products[position].thumbnail,
                                 true,
-                                1
+                                1,
+                                isDeposited = 0
                             )
                         )
                         println(cartDatabase?.cartDao()?.getAllEntities())

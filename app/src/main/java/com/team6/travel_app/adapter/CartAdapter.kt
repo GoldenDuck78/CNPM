@@ -4,12 +4,14 @@ package com.team6.travel_app.adapter
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
+import android.graphics.Paint
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
+import androidx.core.content.ContextCompat.startActivity
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView
 import com.team6.travel_app.R
 import com.team6.travel_app.data.Cart
@@ -19,11 +21,16 @@ import com.team6.travel_app.data.ProductDatabase
 import com.team6.travel_app.databinding.EachCartBinding
 import com.team6.travel_app.databinding.FragmentCartBinding
 import com.team6.travel_app.model.Product
+import com.team6.travel_app.utils.downloadFromUrl
+import com.team6.travel_app.utils.placeholderProgressBar
+import com.team6.travel_app.view.PaymentActivity
 import com.team6.travel_app.view.ProductDetailsActivity
 import com.team6.travel_app.viewmodel.CartViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.math.round
 
 class CartAdapter(
     private val cartList: ArrayList<Cart>,
@@ -57,22 +64,45 @@ class CartAdapter(
     ) {
         val viewModel = CartViewModel()
         holder.binding.product = cartList[position]
-        /*with(holder){
-            with(cartList[position]){
-                binding.imageOfProduct.downloadFromUrl(this.thumbnail, placeholderProgressBar(holder.itemView.context))
-                //binding.textViewProductName.text = this.title
-                (dollar + this.price.toString()).also { binding.textViewProductPrice.text = it }
-            }
-        }*/
+        holder.binding.imageOfProduct.downloadFromUrl(
+            cartList[position].thumbnail,
+            placeholderProgressBar(holder.itemView.context)
+        )
+        holder.binding.textViewOriginalPrice.paintFlags = holder.binding.textViewOriginalPrice.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
 
+        val discountedPrice = cartList[position].price!! * (100 - cartList[position].discountPercentage!!) / 100
+        val roundedDiscountPrice = round(discountedPrice).toInt()
+        holder.binding.textViewDiscountPrice.text = "$roundedDiscountPrice đ"
         // tru - va cap nhat gia
         holder.binding.productQuantityMinus.setOnClickListener {
-
             println("minus")
             changeProductQuantity(false, holder)
+        }
+        if (cartList[position].isDeposited == 1){
+            holder.binding.depositButton.text = "Đã cọc"  // Update button text to show it's deposited
+            holder.binding.depositButton.isEnabled = false  // Disable button after action
+        }
 
-
-
+        holder.binding.depositButton.setOnClickListener {
+            holder.binding.depositButton.isEnabled = false  // Disable button to prevent multiple clicks
+            CoroutineScope(Dispatchers.IO).launch {
+                val position = holder.adapterPosition
+                val cartItem = cartList[position]
+                val cardDb = CartDatabase.invoke(context).cartDao()
+                cartItem.id?.let { id ->
+                    cardDb.setIsDeposited(id, 1)
+                }
+                val amount = cartItem.discountPercentage!!.toDouble() * cartItem.price!!.toInt() * 0.1
+                withContext(Dispatchers.Main) {
+                    val intent = Intent(context, PaymentActivity::class.java).apply {
+                        putExtra("amount", round(amount).toInt())
+                    }
+                    context.startActivity(intent)
+                    holder.binding.depositButton.text = "Đã cọc"
+                    holder.binding.depositButton.isEnabled = false
+                }
+                viewModel.postRequestDeposit(context, database, cartList[position].id!!)
+            }
         }
         holder.itemView.setOnClickListener {
             val id = cartList[position].id
@@ -85,7 +115,6 @@ class CartAdapter(
                 intent.putExtra("product", product1)
                 context.startActivity(intent)
             }
-
             Log.i(TAG, "onBindViewHolder: ${cartList[position].id}")
 //            val viewModel = CartViewModel()
             viewModel.onViewClicked(context, cartList[position].id!!) // TODO viewmodel isn't triggered
@@ -96,9 +125,7 @@ class CartAdapter(
 
         }
 
-        /*holder.binding.imageOfProduct.downloadFromUrl(cartList.get(position).thumbnail, placeholderProgressBar(holder.itemView.context))
-        holder.binding.textViewProductName.text = cartList.get(position).title
-        (dollar + cartList.get(position).price.toString()).also { holder.binding.textViewProductPrice.text = it } //dollar olarak kendi değişkenimi kullanmadım.*/
+
 
     }
 
@@ -121,30 +148,6 @@ class CartAdapter(
     private fun changeProductQuantity(increaseQuantity: Boolean, holder: PlaceHolder) {
         val viewModel = CartViewModel()
         holder.binding.product?.id?.let { viewModel.updateQuantity(increaseQuantity,it,database,holder, bd) }
-        /*val database = CartDatabase.invoke(context)
-        var quantity = holder.binding.product?.id!!.let { database.cartDao().getQuantity(it) }
-        println("the amount of quantity: $quantity")
-        if (increaseQuantity) {
-            database.cartDao().updateQuantity(holder.binding.product?.id!!, ++quantity)
-            viewModel.calculateTotalAmounth(database)
-            println("new quantity : " + holder.binding.product?.id!!.let {
-                database.cartDao().getQuantity(it)
-            })
-            viewModel.calculateTotalAmounth(database)
-        } else if (!increaseQuantity && quantity > 1) {
-            database.cartDao().updateQuantity(holder.binding.product?.id!!, --quantity)
-            viewModel.calculateTotalAmounth(database)
-            println("new quantity : " + holder.binding.product?.id!!.let {
-                database.cartDao().getQuantity(it)
-            })
-        }
-        val price = database.cartDao().getPrice(holder.binding.product?.id!!)
-        CoroutineScope(Dispatchers.Main).launch {
-            holder.binding.productQuantityEditText.setText(quantity.toString())
-            println("the edit text set to $quantity")
-            //holder.binding.textViewProductPrice.text = ""
-            holder.binding.textViewProductPrice.text = (quantity * price).toString()
-        }*/
 
     }
 

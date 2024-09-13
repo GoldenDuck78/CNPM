@@ -30,11 +30,15 @@ data class Tour(
     @SerializedName("isChecked") val isChecked: Boolean? = null
 ) : Parcelable
 
+
 @Parcelize
 data class TourP(
     @SerializedName("quantity") val quantity: Int? = null,
     @SerializedName("registration_date") val registrationDate: String? = null,
     @SerializedName("cus_id") val cusId: String? = null,
     @SerializedName("product_id") val productId: Int? = null,
-    @SerializedName("isChecked") val isChecked: Int? = null
+    @SerializedName("isChecked") val isChecked: Int? = null,
+    @SerializedName("price") val price : Int? = null,
+    @SerializedName("isDeposited") val isDeposited : Int? = null
+
 ) : Parcelable

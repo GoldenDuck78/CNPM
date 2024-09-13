@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.libraries.places.api.model.LocalDate
 import com.team6.travel_app.adapter.CartAdapter
 import com.team6.travel_app.data.Cart
 import com.team6.travel_app.data.CartDatabase
@@ -15,7 +16,6 @@ import com.team6.travel_app.data.ImageDatabase
 import com.team6.travel_app.data.ProductDatabase
 import com.team6.travel_app.databinding.FragmentCartBinding
 import com.team6.travel_app.model.Product
-import com.team6.travel_app.model.Tour
 import com.team6.travel_app.model.TourBaseClass
 import com.team6.travel_app.model.TourP
 import com.team6.travel_app.service.ToursAPI
@@ -28,6 +28,12 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.team6.travel_app.data.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.util.Locale
+import kotlin.math.round
 
 
 class CartViewModel() : ViewModel() {
@@ -57,7 +63,7 @@ class CartViewModel() : ViewModel() {
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             cartDatabase.cartDao().getAllEntities().forEach {
-                tempList.add(it) //TODO)
+                tempList.add(it)
             }
         }
         cartList.value = tempList
@@ -91,9 +97,13 @@ class CartViewModel() : ViewModel() {
         val cartList = cartDatabase.cartDao().getAllEntities()
         cartList.forEach { cart ->
             println("the value of cartlist : $cartList")
+            val discountedPrice = cart.price!! * (100 - cart.discountPercentage!!) / 100
+            var price = round(discountedPrice).toInt()
+            if (cart.isDeposited == 1){
+                price = round(price * 0.9).toInt()
+            }
             val quantity = cart.quantity
-            val price = cart.price
-            total += quantity * price!!
+            total += quantity * price
         }
         println("the value of temp total : $total")
         _totalAmounth.postValue(total)
@@ -129,7 +139,7 @@ class CartViewModel() : ViewModel() {
             holder.binding.productQuantityEditText.setText(quantity.toString())
             println("the edit text set to $quantity")
             //holder.binding.textViewProductPrice.text = ""
-            holder.binding.textViewProductPrice.text = (quantity * price).toString() + " đ"
+            holder.binding.textViewOriginalPrice.text = (quantity * price).toString() + " đ"
         }
     }
     fun onViewClicked(context : Context, id : Int) {
@@ -153,8 +163,65 @@ class CartViewModel() : ViewModel() {
         return _totalAmounth
     }
 
-    fun postRequest(context: Context, database: CartDatabase){
-//        val tourp = TourP( 5, "2024-02-19", "TuanNV",4, true)
+    fun postRequest(context: Context, database: CartDatabase) {
+        val cusDb = CustomerDatabase.invoke(context).CustomerDao()
+        val cusid = cusDb.getId()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(MainActivity.TOUR_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val service = retrofit.create(ToursAPI::class.java)
+        val cartList = database.cartDao().getAllEntities()
+
+         CoroutineScope(Dispatchers.IO).launch {
+            val completedRequests = mutableListOf<Deferred<Unit>>()
+            cartList.forEach { cart ->
+                val currentDate = Date()
+                val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                val formattedDate = formatter.format(currentDate)
+
+                val tourp = if (cart.isDeposited == 1) {
+                    TourP(cart.quantity, formattedDate, cusid, cart.id, 1, cart.price, 0)
+                } else {
+                    TourP(cart.quantity, formattedDate, cusid, cart.id, 1)
+                }
+
+                val call = if (cart.isDeposited == 1) {
+                    service.putData(tourp)
+                } else {
+                    service.createPost(tourp)
+                }
+
+                val request = async {
+                    try {
+                        val response = call.execute()
+                        if (response.isSuccessful) {
+                            println("Request successful for cart ID: ${cart.id}")
+                        } else {
+                            println("Request failed for cart ID: ${cart.id} with response code: ${response.code()}")
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        println("Request error for cart ID: ${cart.id} - ${e.message}")
+                    }
+                }
+                completedRequests.add(request)
+            }
+            completedRequests.awaitAll()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, "Payment processing complete", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelJob.cancel()
+    }
+    fun postRequestDeposit(context: Context, database: CartDatabase,id:Int){
         val cusDb = CustomerDatabase.invoke(context).CustomerDao()
         val cusid = cusDb.getId()
         val retrofit = Retrofit
@@ -163,35 +230,28 @@ class CartViewModel() : ViewModel() {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         val service = retrofit.create(ToursAPI::class.java)
+        val cart = database.cartDao().getById(id)
+        val currentDate = Date()
+        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val formattedDate = formatter.format(currentDate)
+        val tourp = TourP(cart.quantity, formattedDate, cusid, cart.id, 1, cart.price,1)
+        val call = service.createPost(tourp)
+        call.enqueue(object : Callback<TourBaseClass> {
+            override fun onFailure(call: Call<TourBaseClass>, t: Throwable) {
+                t.printStackTrace()
+            }
+            override fun onResponse(
+                call: Call<TourBaseClass>,
+                response: Response<TourBaseClass>
+            ) {
 
-
-
-        val cartList = database.cartDao().getAllEntities()
-        cartList.forEach { cart ->
-            val tourp = TourP(cart.quantity, "2024-02-21", cusid, cart.id, 1)
-            val call = service.createPost(tourp)
-            call.enqueue(object : Callback<TourBaseClass> {
-                override fun onFailure(call: Call<TourBaseClass>, t: Throwable) {
-                    t.printStackTrace()
-                }
-                override fun onResponse(
-                    call: Call<TourBaseClass>,
-                    response: Response<TourBaseClass>
-                ) {
-                    print("ok")
-                }
-            })
-        }
+                print(response.message())
+            }
+        })
         CoroutineScope(Dispatchers.Main).launch {
-            Toast.makeText(context, "thanh toán thành công", Toast.LENGTH_SHORT).show()
+//            Toast.makeText(context, "thanh toán thành công", Toast.LENGTH_SHORT).show()
         }
 
     }
-
-    override fun onCleared() {
-        super.onCleared()
-        viewModelJob.cancel()
-    }
-
 
 }

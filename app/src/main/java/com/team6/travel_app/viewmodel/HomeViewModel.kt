@@ -5,15 +5,21 @@ import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import com.team6.travel_app.data.Image
 import com.team6.travel_app.data.ImageDatabase
 import com.team6.travel_app.data.ProductDatabase
 import com.team6.travel_app.model.BaseClass
+import com.team6.travel_app.model.CusBaseClass
 import com.team6.travel_app.model.Product
 import com.team6.travel_app.service.ProductsAPI
 import com.team6.travel_app.utils.CustomSharedPreferences
 import com.team6.travel_app.view.MainActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -42,27 +48,50 @@ class HomeViewModel : ViewModel() {
     }
 
     // getDataFromApi
-    private fun getDataFromAPI(context: Context){
-        val retrofit = Retrofit
-            .Builder()
+    private fun getDataFromAPI(context: Context) {
+        // Initialize Retrofit
+        val retrofit = Retrofit.Builder()
             .baseUrl(MainActivity.BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+
+        // Create API service
         val service = retrofit.create(ProductsAPI::class.java)
+
+        // Create API call
         val call = service.getData()
-        call.enqueue(object : Callback<BaseClass> {
-            override fun onFailure(call: Call<BaseClass>, t: Throwable) {
+
+        // Execute API call
+        call.enqueue(object : Callback<ResponseBody> {
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 t.printStackTrace()
-            }
-            override fun onResponse(
-                call: Call<BaseClass>,
-                response: Response<BaseClass>
-            ) {
-                response.body()?.let {
-                    println("onResponse is worked")
-                    it.products?.let { it1 -> storeInSQLite(context, it1 as ArrayList<Product>) }
-                    _products.postValue(it.products as ArrayList<Product>?)
+                CoroutineScope(Dispatchers.Main).launch {
+                    Toast.makeText(context, "Failed to load data: ${t.message}", Toast.LENGTH_SHORT).show()
                 }
+            }
+
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                println(response.message())
+                if (response.isSuccessful) {
+                    response.body()?.let { responseBody ->
+                        println("Data received successfully")
+
+                        val jsonResponse = responseBody.string()
+
+                        // Parse the JSON response to a list of Product
+                        val gson = GsonBuilder().create()
+                        val productType = object : TypeToken<List<Product>>() {}.type
+                        val products: List<Product> = gson.fromJson(jsonResponse, productType)
+                        // Store products in SQLite and update LiveData
+                        storeInSQLite(context, ArrayList(products))
+                        _products.postValue(ArrayList(products))
+                    }
+                } else {
+                    CoroutineScope(Dispatchers.Main).launch {
+                        Toast.makeText(context, "Failed to load data: ${response.message()}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
             }
         })
     }

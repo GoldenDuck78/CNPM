@@ -19,7 +19,8 @@ interface CartDao {
             /* var liveUsers: LiveData<MutableList<User?>?>? =
                  rawDao.getUsers(SimpleSQLiteQuery("SELECT * FROM User ORDER BY name DESC"))*/
     fun getAllEntities() : List<Cart>
-
+    @Query("SELECT * FROM CART WHERE id=:id")
+    fun getById(id: Int) : Cart
     @Query(value = "DELETE FROM cart")
     suspend fun deleteAllRecords()
     @Query("DELETE FROM cart WHERE id =  :id")
@@ -33,7 +34,7 @@ interface CartDao {
     @Query("UPDATE cart SET quantity = :quantity WHERE id = :id")
     fun updateQuantity(id: Int,quantity:Int)
     @Query("SELECT quantity FROM cart WHERE id = :id")
-    fun getQuantity(id:Int) : Int
+    fun getQuantity(id: Int?) : Int
     @Query("SELECT price FROM cart WHERE id = :id")
     fun getPrice(id:Int) : Int
     @Query("SELECT * FROM cart")
@@ -43,5 +44,8 @@ interface CartDao {
 
     @Query("SELECT id FROM cart WHERE id = :id")
     suspend fun searchEntity(id : Int) : Int?
+
+    @Query("Update cart set isDeposited = :isDeposited where id = :id")
+    fun setIsDeposited(id: Int,isDeposited : Int)
 
 }

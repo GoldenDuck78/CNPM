@@ -1,22 +1,16 @@
 package com.team6.travel_app.fragment
 
-import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.team6.travel_app.adapter.ProductsAdapter
 import com.team6.travel_app.adapter.TourAdapter
-import com.team6.travel_app.data.CartDatabase
-import com.team6.travel_app.data.CustomerDatabase
 import com.team6.travel_app.data.Tour
 import com.team6.travel_app.data.TourDatabase
 import com.team6.travel_app.databinding.FragmentTourBinding
@@ -24,7 +18,6 @@ import com.team6.travel_app.model.Product
 import com.team6.travel_app.utils.SwipeHelper
 import com.team6.travel_app.view.ProductDetailsActivity
 import com.team6.travel_app.viewmodel.TourViewModel
-import kotlinx.coroutines.*
 
 
 class TourFragment : Fragment() , TourAdapter.Listener{
@@ -134,13 +127,17 @@ class TourFragment : Fragment() , TourAdapter.Listener{
             "Huỷ chuyến",
             14.0f,
             android.R.color.holo_red_light,
-            object : SwipeHelper.UnderlayButtonClickListener {
+            object : SwipeHelper.UnderlayButtonClickListener, () -> Unit {
                 override fun onClick() {
                     tourDatabase?.let {
                         tourAdapter?.getItemInfo(position)
                             ?.let { it1 -> viewModel.removeItemFromRoom(it1, requireContext()) }
                     }
                     tourAdapter?.deleteItem(position)
+                }
+
+                override fun invoke() {
+                    TODO("Not yet implemented")
                 }
             })
     }
