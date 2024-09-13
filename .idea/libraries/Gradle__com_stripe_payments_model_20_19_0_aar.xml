@@ -1,9 +1,9 @@
 <component name="libraryTable">
   <library name="Gradle: com.stripe:payments-model:20.19.0@aar" external-system-id="GRADLE">
     <CLASSES>
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/424bf0cc2f938a5b9a376daad86cc79f/transformed/payments-model-20.19.0/res" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/424bf0cc2f938a5b9a376daad86cc79f/transformed/payments-model-20.19.0/AndroidManifest.xml" />
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/424bf0cc2f938a5b9a376daad86cc79f/transformed/payments-model-20.19.0/jars/classes.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/4fac965076712fb609e3866cca3e3d7c/transformed/jetified-payments-model-20.19.0/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/4fac965076712fb609e3866cca3e3d7c/transformed/jetified-payments-model-20.19.0/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/4fac965076712fb609e3866cca3e3d7c/transformed/jetified-payments-model-20.19.0/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
